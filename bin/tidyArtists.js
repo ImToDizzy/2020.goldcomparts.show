@@ -2,6 +2,7 @@
 import fs from "fs";
 import { execSync } from "child_process";
 import { csvParseRows, tsvFormat } from "d3-dsv";
+import QRCode from "qrcode";
 import ProgressBar from "progress";
 import { slugify } from "../src/js/helpers";
 
@@ -9,8 +10,11 @@ const rawDir = `${__dirname}/../raw`;
 const dataDir = `${__dirname}/../data`;
 const biosDir = `${__dirname}/../data/bios`;
 const photosDir = `${__dirname}/../static/img/bios`;
+const qrcodeDir = `${__dirname}/../static/img/qr`;
 
-[biosDir, photosDir].forEach((d) => fs.mkdirSync(d, { recursive: true }));
+[biosDir, photosDir, qrcodeDir].forEach((d) =>
+  fs.mkdirSync(d, { recursive: true })
+);
 
 const megaCsv = `${rawDir}/mega.csv`;
 const artistsCsv = `${rawDir}/artists.csv`;
@@ -67,7 +71,7 @@ const artistsMap = new Map();
 
 const bar = new ProgressBar(":percent  [:bar]", { total: artistRows.length });
 
-artistRows.forEach((d) => {
+artistRows.forEach(async (d) => {
   delete d.showOtherName;
   delete d.otherNameLanguage;
   delete d.timestamp;
@@ -118,6 +122,12 @@ artistRows.forEach((d) => {
   //   );
   // }
   delete d.bioImage;
+
+  const url = `https://2020.goldcomparts.show/artists/${slugify(
+    d.name
+  )}?utm_source=wall&utm_medium=qr`;
+
+  await QRCode.toFile(`${qrcodeDir}/${d.username}.svg`, url);
 
   artistsMap.set(d.slug, d);
   bar.tick();
